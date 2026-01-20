@@ -2,6 +2,30 @@
 
 ASP.NET Core Web API (.NET 10) for managing orders with event-driven architecture.
 
+## Screenshots
+
+### Swagger UI
+![Swagger UI](docs/screenshots/swagger-ui.png)
+
+### API Testing
+
+| Test | Screenshot |
+|------|------------|
+| Create Order (201) | ![Create Order](docs/screenshots/create-order.png) |
+| Get All Orders (200) | ![Get Orders](docs/screenshots/get-orders.png) |
+| Update Status (200) | ![Update Status](docs/screenshots/update-status.png) |
+| Validation Error (400) | ![Validation Error](docs/screenshots/validation-error.png) |
+
+### Domain Events Logging
+![Event Logs](docs/screenshots/event-logs.png)
+
+### Test Results
+![Test Results](docs/screenshots/test-results.png)
+
+📄 [View Full Test Report](tests/OrderManagement.Tests/TestResults/TestResults.html)
+
+---
+
 ## Quick Start
 
 ```bash
