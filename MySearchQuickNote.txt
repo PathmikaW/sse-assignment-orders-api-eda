@@ -1,0 +1,441 @@
+dotnet --version
+dotnet tool install --global dotnet-ef
+
+VSCode extesntions: 
+.NET Install Tool
+C# Dev Kit
+REST Client
+
+
+# Create solution
+dotnet new sln -n OrderManagement
+
+# Create Domain project (Class Library)
+dotnet new classlib -n OrderManagement.Domain -o src/OrderManagement.Domain -f net10.0
+
+# Create Application project (Class Library)
+dotnet new classlib -n OrderManagement.Application -o src/OrderManagement.Application -f net10.0
+
+# Create Infrastructure project (Class Library)
+dotnet new classlib -n OrderManagement.Infrastructure -o src/OrderManagement.Infrastructure -f net10.0
+
+# Create API project (Web API)
+dotnet new webapi -n OrderManagement.Api -o src/OrderManagement.Api -f net10.0
+
+# Create Test project
+dotnet new xunit -n OrderManagement.Tests -o tests/OrderManagement.Tests -f net10.0
+
+-n [Name]: Sets the Project Name and the default Namespace. For example, -n OrderManagement.Domain means your classes will automatically start with namespace OrderManagement.Domain;.
+
+-o [Path]: Short for Output. This tells the CLI where to place the files. By using src/OrderManagement.Domain, you are keeping your source code neatly tucked inside a src folder rather than cluttering the root directory.
+
+-f net10.0: Specifies the Framework. This ensures your project targets .NET 10. If you omit this, it defaults to the latest SDK you have installed. Hardcoding this during setup prevents version mismatches between your layers.
+
+
+Why the .sln file is important for your assignment:
+Project Relationships: It tells the IDE (VS Code) how your Api, Domain, Infrastructure, and Application projects relate to each other.
+
+Build Orchestration: When you run dotnet build on a solution file, it automatically builds all the underlying projects in the correct order based on their dependencies.
+
+VS Code Integration: The C# Dev Kit extension in VS Code uses the .sln file to provide "IntelliSense" (autocomplete) across projects. For example, it allows your API project to "see" a class defined in your Domain project.
+
+Organization: It allows you to group related projects together. In a real-world SSE environment, a single solution might contain 10–20 different projects (Core logic, Web API, Background Workers, Unit Tests, Integration Tests).
+
+What’s inside a .sln file?
+It is actually a simple text file. If you were to open it in Notepad, you would see:
+
+A list of Project GUIDs (unique IDs for each project).
+
+The Path to each .csproj file.
+
+Configuration Platforms (e.g., instructions on how to build in "Debug" mode vs "Release" mode).
+
+
+In the .NET world, .csproj stands for C# Project.
+
+While the .sln (Solution) is the "manager" that holds everything together, the .csproj is the instruction manual for a single project. Every folder you created (Domain, Application, Infrastructure, API) has its own .csproj file.
+
+
+rm OrderManagement.slnx
+
+dotnet new sln -n OrderManagement
+
+Rename-Item OrderManagement.slnx OrderManagement.sln -Force
+
+dotnet new sln -n OrderManagement --format sln --force
+
+# Application references Domain
+dotnet add src/OrderManagement.Application/OrderManagement.Application.csproj reference src/OrderManagement.Domain/OrderManagement.Domain.csproj
+
+# Infrastructure references Domain and Application
+dotnet add src/OrderManagement.Infrastructure/OrderManagement.Infrastructure.csproj reference src/OrderManagement.Domain/OrderManagement.Domain.csproj
+dotnet add src/OrderManagement.Infrastructure/OrderManagement.Infrastructure.csproj reference src/OrderManagement.Application/OrderManagement.Application.csproj
+
+# API references all layers
+dotnet add src/OrderManagement.Api/OrderManagement.Api.csproj reference src/OrderManagement.Domain/OrderManagement.Domain.csproj
+dotnet add src/OrderManagement.Api/OrderManagement.Api.csproj reference src/OrderManagement.Application/OrderManagement.Application.csproj
+dotnet add src/OrderManagement.Api/OrderManagement.Api.csproj reference src/OrderManagement.Infrastructure/OrderManagement.Infrastructure.csproj
+
+# Tests reference all projects
+dotnet add tests/OrderManagement.Tests/OrderManagement.Tests.csproj reference src/OrderManagement.Domain/OrderManagement.Domain.csproj
+dotnet add tests/OrderManagement.Tests/OrderManagement.Tests.csproj reference src/OrderManagement.Application/OrderManagement.Application.csproj
+dotnet add tests/OrderManagement.Tests/OrderManagement.Tests.csproj reference src/OrderManagement.Infrastructure/OrderManagement.Infrastructure.csproj
+dotnet add tests/OrderManagement.Tests/OrderManagement.Tests.csproj reference src/OrderManagement.Api/OrderManagement.Api.csproj
+
+
+PS D:\Temp\.NetAssessment\sse-assignment-orders-api-eda> dotnet build                                                                                                              
+Restore complete (1.3s)
+  OrderManagement.Domain net10.0 succeeded (4.8s) → src\OrderManagement.Domain\bin\Debug\net10.0\OrderManagement.Domain.dll
+  OrderManagement.Application net10.0 succeeded (0.6s) → src\OrderManagement.Application\bin\Debug\net10.0\OrderManagement.Application.dll
+  OrderManagement.Infrastructure net10.0 succeeded (0.5s) → src\OrderManagement.Infrastructure\bin\Debug\net10.0\OrderManagement.Infrastructure.dll
+  OrderManagement.Api net10.0 succeeded (4.9s) → src\OrderManagement.Api\bin\Debug\net10.0\OrderManagement.Api.dll
+  OrderManagement.Tests net10.0 succeeded (6.8s) → tests\OrderManagement.Tests\bin\Debug\net10.0\OrderManagement.Tests.dll
+
+Build succeeded in 18.9s
+
+
+Build success! You now have a verified, stable foundation. The packages you are about to install are exactly what an SSE should use for this assignment:
+
+MediatR: For the "Event-Driven" requirement.
+
+FluentValidation: For the "proper validation" requirement.
+
+In-Memory EF Core: For the "persistence" requirement.
+
+Moq & FluentAssertions: For high-quality unit and integration testing.
+
+
+# Application layer packages
+dotnet add src/OrderManagement.Application/OrderManagement.Application.csproj package MediatR
+dotnet add src/OrderManagement.Application/OrderManagement.Application.csproj package FluentValidation
+dotnet add src/OrderManagement.Application/OrderManagement.Application.csproj package FluentValidation.DependencyInjectionExtensions
+
+# Infrastructure layer packages
+dotnet add src/OrderManagement.Infrastructure/OrderManagement.Infrastructure.csproj package Microsoft.EntityFrameworkCore.InMemory
+
+# API layer packages
+dotnet add src/OrderManagement.Api/OrderManagement.Api.csproj package FluentValidation.AspNetCore
+
+# Test packages
+dotnet add tests/OrderManagement.Tests/OrderManagement.Tests.csproj package Moq
+dotnet add tests/OrderManagement.Tests/OrderManagement.Tests.csproj package FluentAssertions
+dotnet add tests/OrderManagement.Tests/OrderManagement.Tests.csproj package Microsoft.AspNetCore.Mvc.Testing
+
+In .NET, we do not use a separate file like package.json because the .csproj files you just modified serve that exact purpose.
+
+When you ran those dotnet add package commands, the .NET CLI automatically updated each project's .csproj file to include the package name and version.
+
+How Dependency Management Works in .NET
+The Project File (.csproj): This is your source of truth. It lists the dependencies required for that specific layer (e.g., MediatR in Application, EF Core in Infrastructure).
+
+The Lock File (project.assets.json): When you run dotnet build or dotnet restore, .NET generates a hidden file in your obj folder. This is the equivalent of package-lock.json or yarn.lock; it contains the full dependency tree, including sub-dependencies.
+
+Global Cache: Unlike node_modules which downloads packages into every project folder, .NET downloads packages once into a global user cache on your Windows machine. Your projects simply "point" to that cache during compilation.
+
+Best Practice: The "Shared" NuGet Versioning
+you should know that if you have 10 projects, you want them all using the same version of MediatR. While you've added them manually now, in larger solutions, we often use a Directory.Packages.props file to manage versions in one single place—this is the closest equivalent to a package.json for a whole solution.
+
+
+-------------------------------The Domain Layer complete with:
+
+File	Purpose
+Enums/OrderStatus.cs	Pending, Paid, Cancelled enum
+Events/IDomainEvent.cs	Base interface for domain events
+Events/OrderCreatedEvent.cs	Event for order creation
+Events/OrderStatusChangedEvent.cs	Event for status changes
+Entities/Order.cs	Order entity with factory method and status transition logic
+OrderManagement.Domain.csproj	Added MediatR.Contracts package
+
+DTO stands for Data Transfer Object. It is a design pattern used to carry data between different parts (layers) of an application or between separate systems (like an API and a client). 
+Key Characteristics
+Simple Structure: DTOs are "dumb" objects that typically only contain properties, constructors, and getters/setters.
+No Business Logic: They do not contain any complex behavior or business rules; their sole purpose is to hold data.
+Decoupled: They allow you to change your internal database models (entities) without breaking the external contract (API) that your clients rely on. 
+Primary Benefits
+Security: You can hide sensitive information (like passwords or internal IDs) by excluding those fields from the DTO sent to the client.
+Performance: DTOs can reduce network overhead by flattening complex objects or sending only the specific fields needed for a particular screen.
+Encapsulation: They prevent "over-posting" vulnerabilities where a malicious user could try to update fields they shouldn't have access to. 
+DTO vs. Entity vs. DAO
+Concept 	Definition	Primary Use Case
+DTO	A lightweight data carrier with no logic.	Moving data between API and client.
+Entity	A model that represents a specific database table.	Database persistence and internal logic.
+DAO	An object that provides an interface to the database.	Performing CRUD operations (Save, Get, Update, Delete).
+Practical Usage
+Developers often use mapping tools like AutoMapper or MapStruct to automatically convert complex internal entities into streamlined DTOs before sending them over the network
+
+
+-----------------------------------------------------The Application Layer  complete with:
+
+File	Purpose
+Interfaces/IOrderRepository.cs	Repository abstraction
+Interfaces/IUnitOfWork.cs	Transaction management abstraction
+DTOs/CreateOrderRequest.cs	Input DTO for order creation
+DTOs/UpdateOrderStatusRequest.cs	Input DTO for status update
+DTOs/OrderResponse.cs	Output DTO for all responses
+DTOs/OrderSearchParameters.cs	Query parameters for search
+Validators/CreateOrderRequestValidator.cs	FluentValidation for create
+Validators/UpdateOrderStatusRequestValidator.cs	FluentValidation for status update
+Services/IOrderService.cs	Service interface
+Services/OrderService.cs	Business logic with event publishing
+EventHandlers/OrderCreatedEventHandler.cs	MediatR handler for OrderCreated
+EventHandlers/OrderStatusChangedEventHandler.cs	MediatR handler for StatusChanged
+DependencyInjection.cs	Service registration extension
+
+
+----------------------------------------------The Infrastructure Layer  complete with:
+
+File	Purpose
+Data/OrderDbContext.cs	EF Core DbContext with entity configuration
+Repositories/OrderRepository.cs	Repository implementation with search filters
+UnitOfWork.cs	Unit of Work for transaction management
+DependencyInjection.cs	Service registration extension
+
+
+----------------------------------The API Layer complete with:
+
+File	Purpose
+Controllers/OrdersController.cs	REST API endpoints with proper HTTP status codes
+Middleware/ExceptionHandlingMiddleware.cs	Global exception handling with ProblemDetails
+Program.cs	DI configuration, middleware pipeline, Swagger setup
+
+
+-------------------------------------The Unit Tests  complete with:
+
+File	Purpose
+Domain/OrderTests.cs	Tests Order entity creation, validation, status transitions
+Application/OrderServiceTests.cs	Tests OrderService with mocked dependencies
+Application/ValidatorTests.cs	Tests FluentValidation validators
+
+
+del tests\OrderManagement.Tests\UnitTest1.cs
+
+ERRORS and FIXES
+
+PS D:\Temp\.NetAssessment\sse-assignment-orders-api-eda> dotnet build
+    D:\Temp\.NetAssessment\sse-assignment-orders-api-eda\src\OrderManagement.Application\OrderManagement.Application.csproj : error NU1605:
+      Warning As Error: Detected package downgrade: Microsoft.Extensions.Logging.Abstractions from 10.0.0 to 10.0.0-preview.1.25080.5. Reference the package directly from the proj
+      ect to select a different version.
+       OrderManagement.Application -> MediatR 14.0.0 -> Microsoft.Extensions.Logging.Abstractions (>= 10.0.0)
+       OrderManagement.Application -> Microsoft.Extensions.Logging.Abstractions (>= 10.0.0-preview.1.25080.5)
+
+Restore failed with 1 error(s) in 4.0s
+
+FIX
+the best way to fix this is to be explicit in your project file. You need to tell the Application project to use the stable 10.0.0 version to match what MediatR expects.
+dotnet add src/OrderManagement.Application/OrderManagement.Application.csproj package Microsoft.Extensions.Logging.Abstractions --version 10.0.0
+
+ERROR
+PS D:\Temp\.NetAssessment\sse-assignment-orders-api-eda> dotnet build                                                                                                              
+Restore complete (1.0s)
+  OrderManagement.Domain net10.0 succeeded (3.4s) → src\OrderManagement.Domain\bin\Debug\net10.0\OrderManagement.Domain.dll
+  OrderManagement.Application net10.0 succeeded (1.8s) → src\OrderManagement.Application\bin\Debug\net10.0\OrderManagement.Application.dll
+  OrderManagement.Infrastructure net10.0 succeeded (0.9s) → src\OrderManagement.Infrastructure\bin\Debug\net10.0\OrderManagement.Infrastructure.dll
+  OrderManagement.Api net10.0 failed with 2 error(s) (3.6s)
+    D:\Temp\.NetAssessment\sse-assignment-orders-api-eda\src\OrderManagement.Api\Program.cs(23,52): error CS0234: The type or namespace name 'Models' does not exist in the namespace 'Microsoft.OpenApi' (are you missing an assembly reference?)
+    D:\Temp\.NetAssessment\sse-assignment-orders-api-eda\src\OrderManagement.Api\Program.cs(23,5): error CS7069: Reference to type 'OpenApiInfo' claims it is defined in 'Microsoft.OpenApi', but it could not be found
+
+Build failed with 2 error(s) in 10.8s
+
+FIX
+
+compatibility issue with the OpenAPI package. Let me fix the Program.cs:
+The issue is that the newer Swashbuckle requires an explicit import. Let me fix the Program.cs:
+e need to add the Microsoft.OpenApi package. Run this command:
+
+options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo Replace with options.SwaggerDoc("v1", new OpenApiInfo
+then
+dotnet add src/OrderManagement.Api/OrderManagement.Api.csproj package Microsoft.OpenApi
+
+
+ERROR
+PS D:\Temp\.NetAssessment\sse-assignment-orders-api-eda> dotnet build
+Restore complete (1.0s)
+  OrderManagement.Domain net10.0 succeeded (0.2s) → src\OrderManagement.Domain\bin\Debug\net10.0\OrderManagement.Domain.dll
+  OrderManagement.Application net10.0 succeeded (0.1s) → src\OrderManagement.Application\bin\Debug\net10.0\OrderManagement.Application.dll
+  OrderManagement.Infrastructure net10.0 succeeded (0.2s) → src\OrderManagement.Infrastructure\bin\Debug\net10.0\OrderManagement.Infrastructure.dll
+  OrderManagement.Api net10.0 failed with 1 error(s) (0.4s)
+    D:\Temp\.NetAssessment\sse-assignment-orders-api-eda\src\OrderManagement.Api\Program.cs(3,25): error CS0234: The type or namespace name 'Models' does not exist in the namespace 'Microsoft.OpenApi' (are you missing an assembly reference?)
+
+Build failed with 1 error(s) in 2.2s
+
+
+PS D:\Temp\.NetAssessment\sse-assignment-orders-api-eda> dotnet build
+Restore complete (0.7s)
+  OrderManagement.Domain net10.0 succeeded (0.2s) → src\OrderManagement.Domain\bin\Debug\net10.0\OrderManagement.Domain.dll
+  OrderManagement.Application net10.0 succeeded (0.1s) → src\OrderManagement.Application\bin\Debug\net10.0\OrderManagement.Application.dll
+  OrderManagement.Infrastructure net10.0 succeeded (0.1s) → src\OrderManagement.Infrastructure\bin\Debug\net10.0\OrderManagement.Infrastructure.dll
+  OrderManagement.Api net10.0 failed with 2 error(s) (0.4s)
+    D:\Temp\.NetAssessment\sse-assignment-orders-api-eda\src\OrderManagement.Api\obj\Debug\net10.0\Microsoft.AspNetCore.OpenApi.SourceGenerators\Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator\OpenApiXmlCommentSupport.generated.cs(399,41): error CS0200: Property or indexer 'IOpenApiMediaType.Example' cannot be assigned to -- it is read only
+    D:\Temp\.NetAssessment\sse-assignment-orders-api-eda\src\OrderManagement.Api\obj\Debug\net10.0\Microsoft.AspNetCore.OpenApi.SourceGenerators\Microsoft.AspNetCore.OpenApi.SourceGenerators.XmlCommentGenerator\OpenApiXmlCommentSupport.generated.cs(461,41): error CS0200: Property or indexer 'IOpenApiMediaType.Example' cannot be assigned to -- it is read only
+
+Build failed with 2 error(s) in 1.9s
+
+FIX
+compatibility issue between the packages. Let me fix the API csproj by removing the conflicting package:
+update <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
+    <PackageReference Include="Microsoft.OpenApi" Version="3.2.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.1" />
+
+    with
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+
+
+
+Build and Verify
+
+cd d:\Temp\.NetAssessment\sse-assignment-orders-api-eda
+------------------------------dotnet build
+
+PS D:\Temp\.NetAssessment\sse-assignment-orders-api-eda> dotnet build
+Restore complete (2.2s)
+  OrderManagement.Domain net10.0 succeeded (0.2s) → src\OrderManagement.Domain\bin\Debug\net10.0\OrderManagement.Domain.dll
+  OrderManagement.Application net10.0 succeeded (0.1s) → src\OrderManagement.Application\bin\Debug\net10.0\OrderManagement.Application.dll
+  OrderManagement.Infrastructure net10.0 succeeded (0.1s) → src\OrderManagement.Infrastructure\bin\Debug\net10.0\OrderManagement.Infrastructure.dll
+  OrderManagement.Api net10.0 succeeded (1.7s) → src\OrderManagement.Api\bin\Debug\net10.0\OrderManagement.Api.dll
+  OrderManagement.Tests net10.0 succeeded (4.0s) → tests\OrderManagement.Tests\bin\Debug\net10.0\OrderManagement.Tests.dll
+
+Build succeeded in 8.7s
+PS D:\Temp\.NetAssessment\sse-assignment-orders-api-eda> 
+
+Run Tests
+
+--------------------------------------dotnet test
+
+PS D:\Temp\.NetAssessment\sse-assignment-orders-api-eda> dotnet test
+Restore complete (0.8s)
+  OrderManagement.Domain net10.0 succeeded (0.2s) → src\OrderManagement.Domain\bin\Debug\net10.0\OrderManagement.Domain.dll
+  OrderManagement.Application net10.0 succeeded (0.1s) → src\OrderManagement.Application\bin\Debug\net10.0\OrderManagement.Application.dll
+  OrderManagement.Infrastructure net10.0 succeeded (0.1s) → src\OrderManagement.Infrastructure\bin\Debug\net10.0\OrderManagement.Infrastructure.dll
+  OrderManagement.Api net10.0 succeeded (0.2s) → src\OrderManagement.Api\bin\Debug\net10.0\OrderManagement.Api.dll
+  OrderManagement.Tests net10.0 succeeded (0.4s) → tests\OrderManagement.Tests\bin\Debug\net10.0\OrderManagement.Tests.dll
+[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 10.0.2)
+[xUnit.net 00:00:02.37]   Discovering: OrderManagement.Tests
+[xUnit.net 00:00:02.49]   Discovered:  OrderManagement.Tests
+[xUnit.net 00:00:02.52]   Starting:    OrderManagement.Tests
+     Warning:
+     The component "Fluent Assertions" is governed by the rules defined in the Xceed License Agreement and
+     the Xceed Fluent Assertions Community License. You may use Fluent Assertions free of charge for
+     non-commercial use only. An active subscription is required to use Fluent Assertions for commercial use.
+     Please contact Xceed Sales mailto:sales@xceed.com to acquire a subscription at a very low cost.
+     A paid commercial license supports the development and continued increasing support of
+     Fluent Assertions users under both commercial and community licenses. Help us
+     keep Fluent Assertions at the forefront of unit testing.
+     For more information, visit https://xceed.com/products/unit-testing/fluent-assertions/
+[xUnit.net 00:00:05.19]   Finished:    OrderManagement.Tests
+  OrderManagement.Tests test net10.0 succeeded (12.3s)
+
+Test summary: total: 34, failed: 0, succeeded: 34, skipped: 0, duration: 12.3s
+Build succeeded in 14.5s
+
+
+Run the API
+
+------------------------------- dotnet run --project src/OrderManagement.Api
+
+PS D:\Temp\.NetAssessment\sse-assignment-orders-api-eda> dotnet run --project src/OrderManagement.Api
+Using launch settings from src\OrderManagement.Api\Properties\launchSettings.json...
+Building...
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5284
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: D:\Temp\.NetAssessment\sse-assignment-orders-api-eda\src\OrderManagement.Api
+
+
+info: Microsoft.EntityFrameworkCore.Update[30100]
+      Saved 1 entities to in-memory store.
+info: OrderManagement.Application.Services.OrderService[0]
+      Order ORD-20260120-DAE602F5 created for abc@gmail.com
+info: OrderManagement.Application.EventHandlers.OrderCreatedEventHandler[0]
+      [Event] OrderCreated - OrderId: 8a8eaf68-d6c4-4c86-a5cf-68b3c84a7f08, OrderNumber: ORD-20260120-DAE602F5, CustomerEmail: abc@gmail.com, TotalAmount: ¤10.00
+info: Microsoft.EntityFrameworkCore.Update[30100]
+      Saved 1 entities to in-memory store.
+info: OrderManagement.Application.Services.OrderService[0]
+      Order ORD-20260120-DAE602F5 deleted
+
+HTML Report (readable in browser)
+
+------------------------------------------ dotnet test --logger "html;LogFileName=TestResults.html"
+Results saved to: tests/OrderManagement.Tests/TestResults/TestResults.html
+
+Before zipping, clean the build artifacts:
+
+
+cd D:\Temp\.NetAssessment\sse-assignment-orders-api-eda
+dotnet clean
+Then zip the folder. The evaluator can restore packages with dotnet restore.
+
+Full sequence:
+
+# Clean (removes bin/obj)
+dotnet clean
+
+# Rebuild (restores packages + compiles)
+dotnet build
+
+# Run tests
+dotnet test
+
+# Run the API
+dotnet run --project src/OrderManagement.Api
+
+For production deployment, here's the process:
+
+1. Publish the Application
+
+dotnet publish src/OrderManagement.Api -c Release -o ./publish
+This creates optimized, production-ready files in ./publish folder.
+
+2. Deployment Options
+Option A: IIS (Windows Server)
+
+# Publish
+dotnet publish src/OrderManagement.Api -c Release -o C:\inetpub\wwwroot\OrderApi
+
+# Configure IIS:
+# - Create Application Pool (.NET CLR = No Managed Code)
+# - Create Website pointing to publish folder
+# - Install ASP.NET Core Hosting Bundle
+Option B: Docker Container
+
+# Dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+WORKDIR /app
+COPY ./publish .
+EXPOSE 80
+ENTRYPOINT ["dotnet", "OrderManagement.Api.dll"]
+
+# Build and run
+docker build -t order-api .
+docker run -d -p 80:80 order-api
+Option C: Azure App Service
+
+# Using Azure CLI
+az webapp up --name order-management-api --resource-group MyRG --runtime "DOTNET:10.0"
+Option D: Linux Server (Kestrel + Nginx)
+
+# Copy publish folder to server
+scp -r ./publish user@server:/var/www/orderapi
+
+# Create systemd service (/etc/systemd/system/orderapi.service)
+# Configure Nginx as reverse proxy
+3. Production Considerations
+Item	Change Required
+Database	Replace InMemory with SQL Server/PostgreSQL
+Logging	Add Serilog with file/cloud sinks
+HTTPS	Configure SSL certificate
+Secrets	Use Azure Key Vault / AWS Secrets Manager
+Health Checks	Add /health endpoint
+CORS	Configure if needed for frontend
+4. Update for Real Database
+In Infrastructure/DependencyInjection.cs:
+
+
+// Replace InMemory with SQL Server
+services.AddDbContext<OrderDbContext>(options =>
+    options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+
