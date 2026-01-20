@@ -18,15 +18,7 @@ builder.Services.AddFluentValidationAutoValidation();
 
 // Add Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
-    {
-        Title = "Order Management API",
-        Version = "v1",
-        Description = "ASP.NET Core Web API for managing orders with event-driven architecture"
-    });
-});
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
