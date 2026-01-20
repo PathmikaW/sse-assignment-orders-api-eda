@@ -1,0 +1,10 @@
+# SSE Assignment: Build an ASP.NET Core Web API for Managing Orders with Event-Driven Architecture
+
+
+Build a small **AS.NET Core Web API (.NET 10) to manage Orders as an open-book take-home exercise (4–6 hours), 
+exposing endpoints to create, retrieve, search, update status, and delete orders with proper validation and HTTP status codes.
+The `Order` should include `Id`, `OrderNumber`, `CustomerEmail`, `OrderDate`(`UTC`), `TotalAmount` (>0), and `Status` (Pending/Paid/Cancelled). In addition, implement a simple event-driven approach
+where domain events (e.g., `OrderCreated`, `OrderStatusChanged`) are published when key actions occur,
+simulating a microservices-friendly architecture using an in-memory event bus, message abstraction, 
+or interface-based publisher (no real broker required). Use clean separation of concerns, in-memory or EF Core persistence, 
+and submit the code with a short README explaining design decisions, assumptions, and potential improvements.
